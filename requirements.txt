@@ -1,0 +1,17 @@
+# Supplemental Python dependencies for the ImagiNav integration.
+#
+# Install the locked LTX environment first by following README.md.
+# This file intentionally contains only requirement specifiers so it can be
+# consumed by pip or uv; host packages and Docker commands belong in the guide.
+google-genai==2.8.0
+pydantic==2.10.4
+numpy==1.26.4
+pillow==11.1.0
+PyYAML==6.0.2
+einops==0.8.2
+lazy-loader==0.5
+lightning-utilities==0.15.3
+lpips==0.1.4
+scikit-image==0.25.2
+scipy==1.15.3
+torchmetrics==1.9.0

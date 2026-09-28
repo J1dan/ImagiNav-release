@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+message: "If you use ImagiNav in your research, please cite the paper below."
+title: "ImagiNav"
+type: software
+authors:
+  - family-names: Chen
+    given-names: Jie
+  - family-names: Cai
+    given-names: Yuxin
+  - family-names: Wang
+    given-names: Yizhuo
+  - family-names: Bai
+    given-names: Ruofei
+  - family-names: Cao
+    given-names: Yuhong
+  - family-names: Li
+    given-names: Jun
+  - family-names: Yau
+    given-names: Wei-Yun
+  - family-names: Sartoretti
+    given-names: Guillaume Adrien
+repository-code: "https://github.com/J1dan/ImagiNav"
+license: MIT
+preferred-citation:
+  type: conference-paper
+  title: "ImagiNav: Scalable Embodied Navigation Via Generative Visual Prediction and Inverse Dynamics"
+  collection-title: "2026 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)"
+  conference:
+    name: "2026 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)"
+  authors:
+    - family-names: Chen
+      given-names: Jie
+    - family-names: Cai
+      given-names: Yuxin
+    - family-names: Wang
+      given-names: Yizhuo
+    - family-names: Bai
+      given-names: Ruofei
+    - family-names: Cao
+      given-names: Yuhong
+    - family-names: Li
+      given-names: Jun
+    - family-names: Yau
+      given-names: Wei-Yun
+    - family-names: Sartoretti
+      given-names: Guillaume Adrien
+  year: 2026
+  url: "https://arxiv.org/abs/2603.13833"

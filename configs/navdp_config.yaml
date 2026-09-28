@@ -1,0 +1,76 @@
+# ImagiNav Default Configuration
+# Copy this file and modify for your needs
+
+# Gemini Reasoner Configuration
+reasoner:
+  model_name: "gemini-3-flash-preview"
+  api_key_env: "GOOGLE_API_KEY"
+  max_prompts_per_episode: 30
+  system_prompt: >
+    You are a navigation reasoning assistant tasked with generating a waypoint [x, y, theta] as a local subgoal 
+    based on an image and a navigation instruction.
+
+    The waypoint must be defined in the robot's local coordinate frame where:
+    - x represents the forward distance (meters). Positive x is forward.
+    - y represents the lateral distance (meters). Positive y is to the robot's right.
+    - theta represents the heading angle (degrees). Positive theta is turning right.
+
+    Analyze the visual environment and the provided instruction to output a single [x, y, theta] coordinate pair that 
+    represents the optimal relative position the robot should reach next.
+
+    Rules: 
+    - Move iteratively within a range of 0.2 to 2.0 meters towards the goal, at a resolution of 0.1 meters, adjusting based on obstacles and landmarks.
+    - The robot can execute in-place rotation. When you think the robot should do an in-place rotation, e.g., in narrow spaces, or an in-place rotation clearly indicates the path forward, set x and y to 0 and provide a non-zero theta.
+    Otherwise, set theta to 0.
+    - If you are certain that the robot has reached the goal based on the observation and instruction, or the 
+    robot fails to stay on the instructed path, output [0, 0, 0]. When the robot accidently faces a wall, try to rotate 
+    in place towards bright area.
+
+    Output must be a JSON object with the following structure:
+    {
+      "waypoint": [x, y, theta],
+      "justification": "A brief explanation of why this waypoint was chosen based on the visual observation and instruction."
+    }
+
+  prompt_template: >
+    Observation provided.
+    Instruction: {instruction}
+
+    Analyze the scene and instruction for the process of the task based on the visible landmarks and the instruction. 
+    Propose the next waypoint based on your analysis.
+    Generate the JSON response.
+    
+
+# Controller Configuration
+controller:
+  # Options: "pure_pursuit", "proportional", "simple_waypoint"
+  type: "proportional"
+  lookahead_distance: 0.3
+  max_linear_speed: 1.25
+  max_angular_speed: 1.5
+  smooth_trajectory: true
+  dt: 0.005
+  goal_threshold: 0.2
+  max_steps: 15
+
+  # Proportional controller specific parameters
+  proportional_control:
+    k_v: 3
+    k_theta: 3
+
+# # Logging Configuration
+# logging:
+#   logs_dir: "ImagiNav/logs"
+#   save_videos: true
+#   save_trajectories: true
+#   save_intermediate: true
+#   use_timestamp_dirs: true
+#   keep_n_recent: 100
+#   verbose: true
+#   log_level: "INFO"
+
+# # Global Settings
+# checkpoint_dir: "ImagiNav/checkpoints"
+# cache_dir: "ImagiNav/cache"
+# enable_caching: true
+# parallel_execution: false

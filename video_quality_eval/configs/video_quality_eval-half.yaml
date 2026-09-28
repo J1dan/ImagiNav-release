@@ -1,0 +1,74 @@
+# Unified config for ImagiNav video quality evaluation
+
+# Device configuration: specify which GPU to use (e.g., "cuda:0", "cuda:1", "cpu")
+# If null, will auto-select cuda if available, otherwise cpu
+device: cuda:0
+
+# Optional: directory to use for temporary files (frames, memmap, etc).
+# If null or omitted, a system temporary directory (mkdtemp) will be used.
+# Example: temp_dir: /tmp/imaginav_eval
+temp_dir: /tmp/imaginav_eval_half
+
+dataset:
+  dataset_json: datasets/reference_videos/dataset-20260131.json
+  dataset_root: datasets/reference_videos
+  vggt_metadata_json: datasets/reference_videos/vggt-cache.json
+  first_frame_dir: datasets/reference_videos/first_frame_images
+
+enable_metrics:
+  motion_fidelity: true
+  gemini_scoring: false
+  lpips: true
+  psnr: true
+  ssim: true
+  fvd: true
+
+motion_fidelity:
+  compare_against: labels  # primitives | labels
+  prompt_max_primitives: 2
+  analysis_subsample_step: 6
+  yaw_thresh_deg: 2.0
+  forward_thresh_m: 0.006
+  min_consecutive_frames: 5
+
+fvd:
+  model_name: videomae
+  half_precision: true
+
+generation:
+  # Output directory for generated videos (relative to dataset_root or absolute)
+  synthetic_videos_dir: synthetic_videos_half
+  # Dataset JSON used for video generation.
+  gen_dataset_json: datasets/reference_videos/dataset-20260131_with_firstframes.json
+  # Device for video generation (e.g., "cuda:0", "cuda:1", "cpu", or null for auto-detect)
+  device: cuda:0
+  seed: 42
+  random_seed: 42
+  negative_prompt: "worst quality, inconsistent motion, blurry, jittery, distorted, collision"
+  overwrite: false
+  overwrite_first_frames: false
+  # Use the first half of the full manifest as a lightweight subset.
+  limit: 355
+  # Inference / generation settings
+  # video_dims: [width, height, frames]
+  video_dims: [480, 256, 121]
+  inference_steps: 50
+  guidance_scale: 3.8
+  videos_per_prompt: 1
+  # Motion-specific LoRA weights (required): configured LoRA files must exist; generation will abort if they are missing.
+  # Paths may be absolute or relative to this config file. '~' (tilde) is supported and will be expanded.
+  # Example: lora_turn_left: "../checkpoints/LTX-2B-AC-MoE-LoRA/lora-weights-2b-85epoch-left.safetensors"
+  lora_turn_left: ../checkpoints/LTX-2B-AC-MoE-LoRA/lora-weights-2b-85epoch-left.safetensors
+  lora_turn_right: ../checkpoints/LTX-2B-AC-MoE-LoRA/lora-weights-2b-85epoch-right.safetensors
+
+# imaginav_overrides:
+#   imagination:
+#     # Set your base checkpoint or model path here if supported by ImagiNavConfig
+#     checkpoint: /path/to/ltx_video_checkpoint
+#     output_format: mp4
+#   navigation:
+#     vggt_checkpoint: /path/to/vggt_checkpoint
+#     video_fps: 24
+#   reasoner:
+#     api_key_env: GEMINI_API_KEY
+#     scorer_model_name: gemini-2.0-flash-001

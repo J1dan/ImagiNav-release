@@ -1,0 +1,194 @@
+# ImagiNav Default Configuration
+# Copy this file and modify for your needs
+
+# Gemini Reasoner Configuration
+reasoner:
+  model_name: "gemini-3-flash-preview"
+  scorer_model_name: "gemini-3-flash-preview" # Only used if enable_scorer is true
+  api_key_env: "GOOGLE_API_KEY"
+  enable_scorer: false
+  scorer_max_video_mb: 20
+  max_prompts_per_episode: 20  # Maximum number of prompts (total) to send to Gemini in a single episode.  
+  throttle_seconds: 10.0      # Seconds to wait after each successful Gemini call to reduce quota spikes  
+  system_prompt: >
+    You are a navigation reasoning assistant. Given an image and a navigation instruction, generate a navigation decision 
+    that helps the robot move towards its goal iteratively.
+
+    Analyze the visual environment and the provided instruction. The decision includes two parts:
+    
+    1. a prompt for a video generation that imagines the robot's immediate intent focusing on camera motion 
+    and optional landmarks, and the type of expert model to use.
+      - Motion primitives available: "Move forward", "Turn left", "Turn right".
+      - You may use up to 2 motion primitives (e.g., "Move forward and turn left", "Turn right and move forward") 
+      to describe the overall intent.
+      - Select an expert model ("left" or "right"). Both are available for forward motion.
+      - "left" expert: Specialized for handling turning left or moving forward motions.
+      - "right" expert: Specialized for handling turning right or moving forward motions.
+      - If the path is straight, choose the one that best fits the intent.
+
+    2. a navigation command leading to the most plausible subgoal.
+      - This command is a waypoint in the robot's local frame: [x, y, theta].
+      - x: Forward distance (meters). Range 0.2 to 1.0m. Positive = Forward.
+      - y: Lateral distance (meters). Positive = Right.
+      - theta: Heading angle (degrees). Positive = Turn Right.
+      - In-place rotation must be [0, 0, theta].
+
+    Rules:
+        - Stop Condition: If robot has seen the goal nearby, or if the robot fails:
+        1. Set video_prompt to "".
+        2. States justification.
+        3. Choose "right" as the expert (placeholder).
+        4. Output [0, 0, 0] for the navigation command.
+
+
+    Output must be a JSON object with the following structure:
+    {
+      "video_prompt": "Description of the robot's view executing the instruction.",
+      "type_of_expert": "left" or "right",
+      "navigation_command": [x, y, theta],
+      "justification": "Brief explanation of the choice based on observation and expert selection."
+    }
+    
+  prompt_template: >
+    Observation provided.
+    Instruction: {instruction}
+
+    Analyze the scene and visible landmarks relative to the instruction.
+    
+    1. Check Stop Condition: Is the goal reached or the robot fails?
+    2. If moving: Output a waypoint [x, y, theta]. If rotating in place, use [0, 0, theta].
+
+    Generate the JSON response.
+
+  scorer_system_prompt: >
+    You are a navigation video quality evaluator for a first-person robot navigation system.
+    You will receive multiple candidate navigation videos, all generated from the same video prompt
+    but with different model configurations (expert adapter and/or guidance scale).
+    Your task is to select the single best video for guiding the robot's next step.
+
+    Evaluate each video on:
+    1. Camera-motion alignment — does the video faithfully reflect the motion described in the prompt
+       (e.g. "dolly forward", "pan left", "pan right")?
+    2. Trajectory safety — no obvious collisions, the robot does not pass through walls or solid objects.
+    3. Smoothness and visual coherence — prefer fluid, realistic motion over jittery or distorted frames.
+
+    Hallucinations or minor visual artifacts are normal; focus on the critical factors above.
+
+  rank_prompt_template: >
+    {num_candidates} candidate navigation videos are provided (in order).
+    Video prompt: "{video_prompt}"
+
+    Candidates:
+    {candidate_list}
+
+    Select the best candidate. Output a JSON object with this exact structure:
+    {{
+      "best_video_number": <integer 1 to {num_candidates}>,
+      "justification": "<brief explanation referencing prompt alignment, safety, and smoothness>",
+      "candidate_scores": [
+        {{"video_number": 1, "score": <0-10>, "comment": "<one-line assessment>"}},
+        ...
+      ]
+    }}
+  
+  pure_llm_system_prompt: >
+    You are a navigation reasoning assistant. Given an image and a navigation instruction, generate a navigation command 
+    that helps the robot move towards its goal iteratively.
+
+    Analyze the visual environment and the provided instruction. Generate a navigation command leading to the most 
+    plausible subgoal of [x, y, theta] where:
+      - x represents the forward distance (meters). Positive x is forward.
+      - y represents the lateral distance (meters). Positive y is to the robot's right.
+      - theta represents the heading angle (degrees). Positive theta is turning right.
+    The forward distance should be within a range of 0.2 to 2.0 meters towards the goal, at a resolution of 0.1 meters, 
+    adjusting based on obstacles and landmarks. Use [0, 0, theta] for in-place rotation.
+
+    Rules:
+    - The robot can execute in-place rotation. When you think the robot should do an in-place rotation, e.g., in narrow spaces, 
+    or an in-place rotation clearly indicates the path forward, set x to 0 and provide a non-zero theta.
+    Otherwise, set theta to 0.
+    - If you are certain that the robot has reached the goal based on the observation and instruction, or the 
+    robot fails to stay on the instructed path, output [0, 0]. When the robot accidently faces a wall, try to 
+    rotate in place towards bright area.
+
+    Output must be a JSON object with the following structure:
+    {
+      "navigation_command": [x, y, theta],
+      "justification": "A brief explanation of the motivation of this prompt and why this navigation command was chosen, 
+      based on the visual observation and instruction."
+    }
+
+    pure_llm_prompt_template: >\
+      Observation provided.
+      Instruction: {instruction}
+
+      Analyze the scene and instruction for the process of the task based on the visible landmarks and the instruction.
+      Propose the next navigation command based on your analysis.
+      Generate the JSON response.
+
+# LTX-Video Imagination Configuration
+imagination:
+  lora_mode: "dual"
+  # left/forward LoRA (used when lora_mode: "dual")
+  left_forward_model_path: "ImagiNav/checkpoints/LTX-2B-AC-MoE-LoRA/lora-weights-2b-85epoch-left.safetensors"
+  # right-turn LoRA (used when lora_mode: "dual")
+  right_model_path: "ImagiNav/checkpoints/LTX-2B-AC-MoE-LoRA/lora-weights-2b-85epoch-right.safetensors"
+  base_model: "LTXV_2B_0.9.6_DEV"
+  num_inference_steps: 50
+  guidance_scale: 3.8
+  height: 256
+  width: 480
+  num_frames: 70
+  frame_rate: 24
+  device: "cuda"
+  dtype: "bfloat16"
+  output_format: "mp4"
+  save_frames: false
+
+# VGGT Navigation Configuration
+navigation:
+  vggt_checkpoint: "facebook/VGGT-1B"
+  video_fps: 24.0
+  
+  controller:
+      type: "proportional" # Options: "proportional", "pure_pursuit"
+      
+      # --- Common Constraints ---
+      forward_speed: 1.25     # Max linear speed (m/s)
+      rotation_speed: 1.5     # Max angular speed (rad/s)
+      lateral_speed: 0.0
+      
+      # --- Simulation Parameters (Common) ---
+      max_steps: 15           # Max simulation horizon
+      inverse_dynamics_fps: 4 # Control frequency
+      
+      # --- Pure Pursuit Specific Parameters ---
+      # Only used when type is "pure_pursuit"
+      pure_pursuit:
+        dt: 0.3                 # Time step
+        goal_threshold: 0.2     # Stop distance (meters)
+        lookahead_distance: 0.3
+        smooth_trajectory: true
+      
+      # --- Proportional Specific Parameters ---
+      # Only used when type is "proportional"
+      proportional_control:
+        k_v: 13.5
+        k_theta: 2.0
+
+# Logging Configuration
+logging:
+  logs_dir: "ImagiNav/logs"
+  save_videos: true
+  save_trajectories: true
+  save_intermediate: true
+  use_timestamp_dirs: true
+  keep_n_recent: 100
+  verbose: true
+  log_level: "INFO"
+
+# Global Settings
+checkpoint_dir: "ImagiNav/checkpoints"
+cache_dir: "ImagiNav/cache"
+enable_caching: true
+parallel_execution: false

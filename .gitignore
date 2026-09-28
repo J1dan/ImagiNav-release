@@ -1,0 +1,69 @@
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Isaac Sim & ML ---
+# Checkpoints are usually too large for Git
+checkpoints/
+cache/
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.weights
+
+# --- Logs and Outputs ---
+logs/
+*.log
+output/
+outputs/
+test_samples/
+
+# --- System / IDE ---
+.DS_Store
+.vscode/
+.idea/
+.env
+.env.*
+!.env.example
+.python-version
+
+# --- Temporary/Build ---
+build/
+dist/
+*.egg-info/
+
+# Datasets: ignore video files and first-frame images (these are large and generated)
+video_quality_eval/datasets
+video_quality_eval/datasets/reference_videos/
+video_quality_eval/datasets/synthetic_*
+video_quality_eval/datasets/synthetic_videos*/
+video_quality_eval/datasets/first_frame_images/
+
+video_quality_eval/results/
+samples/generated_videos/
+samples/reference_images/
+configs/smoke_dummy_config.yaml
+video_quality_eval/configs/video_quality_eval_*ep.yaml
+video_quality_eval/configs/video_quality_eval_smoke*.yaml
+
+# Model weights and binaries
+*.pt
+*.pb
+*.index
+*.data-00000-of-00001
+video_quality_eval/common_metrics_on_video_quality/fvd/tensorflow/i3d-kinetics-tensorflow1-400-v1/
+
+# External simulation assets
+data/
+interiornav_data/

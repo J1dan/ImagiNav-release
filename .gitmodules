@@ -1,0 +1,6 @@
+[submodule "vggt"]
+	path = vggt
+	url = https://github.com/J1dan/vggt-release.git
+[submodule "LTX-Video-Trainer"]
+	path = LTX-Video-Trainer
+	url = https://github.com/J1dan/LTX-Video-Trainer-release.git
